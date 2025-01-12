@@ -2,5 +2,7 @@
 </script>
 
 <template>
-  <p>Cleaned App.vue</p>
+  <main class="container mx-auto">
+    <p>Cleaned App.vue</p>
+  </main>
 </template>
