@@ -37,11 +37,11 @@ function playerAlreadyEntered() {
     <h2 class="text-center">Enter your players</h2>
     <form id="addPlayerForm" class="flex gap-2 justify-center" @submit.prevent="addUser">
       <input v-model="newUser" required type="text" placeholder="Player name" class="input input-bordered w-full" @input="error = false">
-      <button type="submit" class="btn btn-nuetral">Add player</button>
+      <button type="submit" class="btn btn-secondary">Add player</button>
     </form>
     <h3 v-if="users.length">Players</h3>
     <ul class="flex gap-2 flex-wrap pl-0">
-      <li v-for="user in users" :key="user.id" class="badge badge-primary badge-lg cursor-pointer text-base capitalize" @click="removeUser(user)">
+      <li v-for="user in users" :key="user.id" class="badge badge-secondary badge-lg p-5 cursor-pointer text-base capitalize" @click="removeUser(user)">
         {{ user.name }}
         <span class="ml-2">&#10005;</span>
       </li>
@@ -54,7 +54,7 @@ function playerAlreadyEntered() {
       <p v-else class="text-center">To begin the game, add at least 2 players</p>
     </div>
 
-    <div v-if="error" role="alert" class="alert alert-error mt-10">
+    <div v-if="error" role="alert" class="alert alert-error mt-10 text-white">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="h-6 w-6 shrink-0 stroke-current"
@@ -68,7 +68,7 @@ function playerAlreadyEntered() {
       </svg>
       <span><span class="capitalize">{{ newUser }}</span> is already in the game</span>
       <div>
-        <button class="btn btn-sm btn-primary" @click="error = false">Accept</button>
+        <button class="btn btn-sm" @click="error = false">Accept</button>
       </div>
     </div>
   </section>
