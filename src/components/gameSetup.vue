@@ -1,55 +1,72 @@
 <script setup lang="ts">
+import { type Player } from '@/utils/database/db';
+import { addPlayer, deletePlayer, getPlayer, getPlayerByName, getTotalPlayers } from '@/utils/database/player';
 import { ref } from 'vue';
 
-type user = {
-  name: string;
-  id: number;
-}
+defineProps<{
+  startGame: false
+}>();
 
-// each player gets an ID that increments from 0
-let id = 0;
+const emit = defineEmits(['startGame'])
 
 let error = ref(false);
 
-const newUser = ref('');
-const users = ref<user[]>([]);
+const newPlayer = ref('');
+const totalPlayers = ref(0);
 
-function addUser() {
-  if (playerAlreadyEntered()) {
+const players = ref<Player[]>([]);
+
+getTotalPlayers().then((val) => totalPlayers.value = val);
+
+async function addNewPlayer() {
+  if (await playerAlreadyEntered()) {
     error.value = true;
     return;
   }
-  users.value.push({ name: newUser.value, id: id++});
-  newUser.value = '';
+
+  const newPlayerId = await addPlayer(newPlayer.value);
+  if (!newPlayerId) return;
+
+  const player = await getPlayer(newPlayerId);
+  if (!player) return;
+
+  players.value.push(player);
+  newPlayer.value = '';
 }
 
-function removeUser(user: user) {
-  users.value = users.value.filter((u) => u !== user);
+async function playerAlreadyEntered() {
+  const player = await getPlayerByName(newPlayer.value);
+  return player ? true : false;
 }
 
-function playerAlreadyEntered() {
-  return users.value.some(({ name }) => name.toLocaleLowerCase() === newUser.value.toLowerCase());
+function handleStartGame() {
+  emit('startGame', true);
+  localStorage.setItem("phase10InProgress", JSON.stringify(true));
 }
 </script>
 
+
 <template>
-  <section class="prose mx-auto mt-10 px-5">
+  <section class="prose mx-auto mt-10 px-5" v-if="startGame">
+    <p class="text-center">Game is not initialized...</p>
+  </section>
+  <section class="prose mx-auto mt-10 px-5" v-else>
     <h2 class="text-center">Enter your players</h2>
-    <form id="addPlayerForm" class="flex gap-2 justify-center" @submit.prevent="addUser">
-      <input v-model="newUser" required type="text" placeholder="Player name" class="input input-bordered w-full" @input="error = false">
+    <form id="addPlayerForm" class="flex gap-2 justify-center" @submit.prevent="addNewPlayer">
+      <input v-model="newPlayer" required type="text" placeholder="Player name" class="input input-bordered w-full" @input="error = false">
       <button type="submit" class="btn btn-secondary">Add player</button>
     </form>
-    <h3 v-if="users.length">Players</h3>
+    <h3 v-if="totalPlayers > 2">Players</h3>
     <ul class="flex gap-2 flex-wrap pl-0">
-      <li v-for="user in users" :key="user.id" class="badge badge-secondary badge-lg p-5 cursor-pointer text-base capitalize" @click="removeUser(user)">
-        {{ user.name }}
+      <li v-for="player in players" :key="player.id" class="badge badge-secondary badge-lg p-5 cursor-pointer text-base capitalize" @click="deletePlayer(player.id)">
+        {{ player.name }}
         <span class="ml-2">&#10005;</span>
       </li>
     </ul>
     <div class="mt-10">
-      <div v-if="users.length >= 2" class="text-center mx-auto">
+      <div v-if="players.length >= 2" class="text-center mx-auto">
         <p>Ready to start?</p>
-        <button class="btn btn-primary btn-wide">Start game</button>
+        <button class="btn btn-primary btn-wide" @click="handleStartGame">Start game</button>
       </div>
       <p v-else class="text-center">To begin the game, add at least 2 players</p>
     </div>
@@ -66,7 +83,7 @@ function playerAlreadyEntered() {
           stroke-width="2"
           d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span><span class="capitalize">{{ newUser }}</span> is already in the game</span>
+      <span><span class="capitalize">{{ newPlayer }}</span> is already in the game</span>
       <div>
         <button class="btn btn-sm" @click="error = false">Accept</button>
       </div>
