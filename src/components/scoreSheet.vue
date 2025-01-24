@@ -3,6 +3,7 @@ import { type Player, type Round } from '@/utils/database/db';
 import { resetGame } from '@/utils/database/game';
 import { getPlayerByName, getPlayers, updatePlayer } from '@/utils/database/player';
 import { addRound, getRounds, getTotalRounds } from '@/utils/database/rounds';
+import NewRoundModal from '@/components/newRoundModal.vue';
 import { ref } from 'vue';
 
 defineProps<{
@@ -94,6 +95,7 @@ getPlayers().then(players => players.forEach(player => allPlayers.value?.push(pl
     <h2>Score sheet</h2>
 
     <div class="overflow-x-auto">
+      <NewRoundModal />
       <button class="btn btn-secondary" @click.prevent="getSam">Get sam</button>
       <button class="btn btn-secondary" @click.prevent="logRounds">Log rounds</button>
       <button class="btn btn-secondary" @click.prevent="updateScore">Update Game State</button>
