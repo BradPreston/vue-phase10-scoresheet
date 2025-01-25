@@ -17,11 +17,11 @@ function restartGame() {
   resetGame().then(() => window.location.reload()).catch(err => console.log(err));
 }
 
-const roundsFromDB = useObservable(
+const roundsFromDB = useObservable<Round[]>(
   liveQuery(async () => await getRounds())
 )
 
-const playersFromDB = useObservable(
+const playersFromDB = useObservable<Player[]>(
   liveQuery(async () => await getPlayers())
 )
 </script>
