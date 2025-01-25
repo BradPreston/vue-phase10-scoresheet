@@ -10,7 +10,7 @@ interface UseObservableOptions {
 
 export function useLiveQuery<T>(
   querier: () => T | Promise<T>,
-  deps: Ref<any>[],
+  deps: Ref<any>[] = [],
   options?: UseObservableOptions,
 ): Readonly<Ref<T>> {
   const value = ref<T | undefined>();

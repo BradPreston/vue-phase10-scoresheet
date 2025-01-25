@@ -16,11 +16,11 @@ function restartGame() {
 }
 
 const roundsFromDB = useLiveQuery<Round[]>(
-  async () => await getRounds(), []
+  async () => await getRounds()
 )
 
 const playersFromDB = useLiveQuery<Player[]>(
-  async () => await getPlayers(), []
+  async () => await getPlayers()
 )
 </script>
 
