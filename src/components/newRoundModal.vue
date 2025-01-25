@@ -20,12 +20,17 @@ async function handleAddRound() {
 	const form = document.getElementById('addRoundForm')! as HTMLFormElement;
 	const formData = new FormData(form);
 	const scores: Score[] = [];
+	const gameOver: Player[] = [];
 	for (const key of formData.keys()) {
 		const name = key.split('-')[0];
 		const player = await getPlayerByName(name);
 		if (!player) return;
 
 		if (!scores.some((score) => score.player_id === player.id)) {
+			if (formData.get(`${name}-made-phase`)) {
+				if (player.phase + 1 >= 11) gameOver.push(player);
+			}
+
 			await updatePlayer({
 				id: player.id,
 				score: player.score + Number(formData.get(`${name}-score`)),
@@ -41,12 +46,19 @@ async function handleAddRound() {
 		}
 	}
 
+	if (gameOver.length > 0) {
+		alert('Game over!');
+		document.getElementById('addRoundButton')!.style.display = 'none';
+	}
+
 	await addRound(round.value, scores);
 }
 </script>
 
 <template>
-	<button v-if="players" class="btn btn-secondary" @click.prevent="modalVisible = true">Add round data</button>
+	<button v-if="players" class="btn btn-secondary" id="addRoundButton" @click.prevent="modalVisible = true">
+		Add round data
+	</button>
 
 	<dialog :open="modalVisible" class="w-full h-screen z-50 fixed top-0 left-0 overflow-y-auto p-4">
 		<h2 class="text-center">Enter the round scores</h2>
