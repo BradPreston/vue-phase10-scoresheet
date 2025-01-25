@@ -32,9 +32,9 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 		</div>
 		<h2>Score sheet</h2>
 
+		<NewRoundModal />
 		<div class="overflow-x-auto">
-			<NewRoundModal />
-			<table class="table table-pin-rows table-pin-cols">
+			<table class="table table-pin-rows">
 				<thead>
 					<tr>
 						<th>Round</th>
@@ -48,7 +48,8 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 						<th>{{ round.round }}</th>
 						<td v-for="result in round.scores" :key="result.name">
 							<span class="inline-block w-4">{{ result.score }}</span
-							><span class="inline-block px-2">|</span><span class="inline-block w-4">{{ result.phase }}</span>
+							><span class="inline-block px-2">|</span
+							><span class="inline-block w-4">{{ result.phase <= 10 ? result.phase : 10 }}</span>
 						</td>
 					</tr>
 				</tbody>
@@ -57,7 +58,8 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 						<th>Score</th>
 						<td v-for="player of playersFromDB" :key="player.id">
 							<span class="inline-block w-4">{{ player.score }}</span
-							><span class="inline-block px-2">|</span><span class="inline-block w-4">{{ player.phase }}</span>
+							><span class="inline-block px-2">|</span
+							><span class="inline-block w-4">{{ player.phase <= 10 ? player.phase : 10 }}</span>
 						</td>
 					</tr>
 				</tfoot>
