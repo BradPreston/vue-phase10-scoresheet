@@ -5,6 +5,8 @@ import { getPlayerByName, getPlayers, updatePlayer } from '@/utils/database/play
 import { addRound, getRounds, getTotalRounds } from '@/utils/database/rounds';
 import NewRoundModal from '@/components/newRoundModal.vue';
 import { ref } from 'vue';
+import { useObservable } from '@vueuse/rxjs';
+import { liveQuery } from "dexie";
 
 defineProps<{
   startGame: boolean;
@@ -82,6 +84,13 @@ async function logRounds() {
 
 getPlayers().then(players => players.forEach(player => allPlayers.value?.push(player)));
 
+const roundsFromDB = useObservable(
+  liveQuery(async () => await getRounds())
+)
+
+const playersFromDB = useObservable(
+  liveQuery(async () => await getPlayers())
+)
 </script>
 
 <template>
@@ -103,11 +112,11 @@ getPlayers().then(players => players.forEach(player => allPlayers.value?.push(pl
     <thead>
       <tr>
         <th>Round</th>
-        <th v-for="player in allPlayers" :key="player.name" class="capitalize">{{ player.name }}</th>
+        <th v-for="player in playersFromDB" :key="player.name" class="capitalize">{{ player.name }}</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="round in allRounds" :key="round.id">
+      <tr v-for="round in roundsFromDB" :key="round.id">
         <th>{{ round.round }}</th>
         <td v-for="result in round.scores" :key="result.name"><span class="inline-block w-4">{{ result.score }}</span><span class="inline-block px-2">|</span><span class="inline-block w-4">{{ result.phase }}</span></td>
       </tr>
@@ -115,7 +124,7 @@ getPlayers().then(players => players.forEach(player => allPlayers.value?.push(pl
     <tfoot>
       <tr>
         <th>Score</th>
-        <td v-for="player of allPlayers">
+        <td v-for="player of playersFromDB">
           <span class="inline-block w-4">{{ player.score }}</span><span class="inline-block px-2">|</span><span class="inline-block w-4">{{ player.phase }}</span>
         </td>
       </tr>
