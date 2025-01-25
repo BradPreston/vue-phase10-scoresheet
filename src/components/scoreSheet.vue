@@ -17,73 +17,6 @@ function restartGame() {
   resetGame().then(() => window.location.reload()).catch(err => console.log(err));
 }
 
-function getSam() {
-  getPlayerByName('sam').then(console.log).catch(err => console.log(err))
-}
-
-let allRounds = ref<Round[]>();
-let allPlayers = ref<Player[]>();
-
-async function updateScore() {
-  const dad = await getPlayerByName('dad');
-  const brad = await getPlayerByName('brad');
-  const sam = await getPlayerByName('sam');
-
-  if (!dad || !brad || !sam) return;
-
-  // replace with loop
-  updatePlayer({
-    id: brad.id,
-    score: brad.score + 35,
-    phase: brad.phase
-  });
-
-  updatePlayer({
-    id: dad.id,
-    score: dad.score + 65,
-    phase: dad.phase
-  });
-
-  updatePlayer({
-    id: sam.id,
-    score: sam.score,
-    phase: sam.phase + 1
-  });
-
-  await addRound(
-    await getTotalRounds(),
-    [
-      {
-        player_id: brad.id,
-        name: brad.name,
-        score: 35,
-        phase: brad.phase
-      },
-      {
-        player_id: dad.id,
-        name: dad.name,
-        score: 65,
-        phase: dad.phase
-      },
-      {
-        player_id: sam.id,
-        name: sam.name,
-        score: 0,
-        phase: sam.phase + 1
-      }
-  ]
-    )
-}
-
-async function logRounds() {
-  const rounds = await getRounds();
-  console.log(rounds);
-  rounds.forEach(round => allRounds.value?.push(round));
-  return rounds;
-}
-
-getPlayers().then(players => players.forEach(player => allPlayers.value?.push(player)));
-
 const roundsFromDB = useObservable(
   liveQuery(async () => await getRounds())
 )
@@ -105,9 +38,6 @@ const playersFromDB = useObservable(
 
     <div class="overflow-x-auto">
       <NewRoundModal />
-      <button class="btn btn-secondary" @click.prevent="getSam">Get sam</button>
-      <button class="btn btn-secondary" @click.prevent="logRounds">Log rounds</button>
-      <button class="btn btn-secondary" @click.prevent="updateScore">Update Game State</button>
       <table class="table table-pin-rows table-pin-cols">
     <thead>
       <tr>
