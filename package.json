@@ -31,5 +31,15 @@
     "vite": "^6.0.5",
     "vite-plugin-vue-devtools": "^7.6.8",
     "vue-tsc": "^2.1.10"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": true,
+    "arrowParens": "always",
+    "bracketSpacing": true,
+    "printWidth": 120,
+    "tabWidth": 2,
+    "trailingComma": "none",
+    "useTabs": true
   }
 }
