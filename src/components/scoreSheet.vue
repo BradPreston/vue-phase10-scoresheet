@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { type Player, type Round } from '@/utils/database/db';
 import { resetGame } from '@/utils/database/game';
-import { getPlayerByName, getPlayers, updatePlayer } from '@/utils/database/player';
-import { addRound, getRounds, getTotalRounds } from '@/utils/database/rounds';
+import { getPlayers } from '@/utils/database/player';
+import { getRounds } from '@/utils/database/rounds';
 import NewRoundModal from '@/components/newRoundModal.vue';
-import { ref } from 'vue';
-import { useObservable } from '@vueuse/rxjs';
-import { liveQuery } from "dexie";
+import { useLiveQuery } from '@/utils/hooks/useLiveQuery';
 
 defineProps<{
   startGame: boolean;
@@ -17,12 +15,12 @@ function restartGame() {
   resetGame().then(() => window.location.reload()).catch(err => console.log(err));
 }
 
-const roundsFromDB = useObservable<Round[]>(
-  liveQuery(async () => await getRounds())
+const roundsFromDB = useLiveQuery<Round[]>(
+  async () => await getRounds(), []
 )
 
-const playersFromDB = useObservable<Player[]>(
-  liveQuery(async () => await getPlayers())
+const playersFromDB = useLiveQuery<Player[]>(
+  async () => await getPlayers(), []
 )
 </script>
 
@@ -54,7 +52,7 @@ const playersFromDB = useObservable<Player[]>(
     <tfoot>
       <tr>
         <th>Score</th>
-        <td v-for="player of playersFromDB">
+        <td v-for="player of playersFromDB" :key="player.id">
           <span class="inline-block w-4">{{ player.score }}</span><span class="inline-block px-2">|</span><span class="inline-block w-4">{{ player.phase }}</span>
         </td>
       </tr>
