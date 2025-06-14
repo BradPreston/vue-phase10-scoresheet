@@ -34,6 +34,11 @@ async function addNewPlayer() {
 	newPlayer.value = '';
 }
 
+async function removeNewPlayer(newPlayerID: number) {
+  players.value = players.value.filter(( player ) => player.id !== newPlayerID);
+  await deletePlayer(newPlayerID);
+}
+
 async function playerAlreadyEntered() {
 	const player = await getPlayerByName(newPlayer.value);
 	return player ? true : false;
@@ -68,7 +73,8 @@ function handleStartGame() {
 				v-for="player in players"
 				:key="player.id"
 				class="badge badge-secondary badge-lg p-5 cursor-pointer text-base capitalize"
-				@click="deletePlayer(player.id)"
+				@touchstart="removeNewPlayer(player.id)"
+				@mousedown="removeNewPlayer(player.id)"
 			>
 				{{ player.name }}
 				<span class="ml-2">&#10005;</span>
