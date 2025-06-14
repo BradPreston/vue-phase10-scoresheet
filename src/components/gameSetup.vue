@@ -73,8 +73,7 @@ function handleStartGame() {
 				v-for="player in players"
 				:key="player.id"
 				class="badge badge-secondary badge-lg p-5 cursor-pointer text-base capitalize"
-				@touchstart="removeNewPlayer(player.id)"
-				@mousedown="removeNewPlayer(player.id)"
+				@click="removeNewPlayer(player.id)"
 			>
 				{{ player.name }}
 				<span class="ml-2">&#10005;</span>
