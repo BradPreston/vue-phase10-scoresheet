@@ -82,7 +82,7 @@ async function handleAddRound() {
 								type="number"
 								:name="player.name + '-score'"
 								class="input input-bordered"
-								value="0"
+								placeholder="Score"
 							/>
 						</label>
 
