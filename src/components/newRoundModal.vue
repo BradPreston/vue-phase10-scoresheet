@@ -61,7 +61,7 @@ async function handleAddRound() {
 		Add round data
 	</button>
 
-	<dialog :open="modalVisible" class="w-full h-screen z-50 fixed top-0 left-0 overflow-y-auto p-4">
+	<dialog :open="modalVisible" class="w-full h-full z-50 fixed top-0 left-0 overflow-y-auto px-4 py-10">
 		<h2 class="text-center">Enter the round scores</h2>
 		<button class="btn btn-ghost fixed top-5 right-5" @click.prevent="modalVisible = false">&#x2715; Close</button>
 		<form @submit.prevent="handleAddRound" id="addRoundForm" class="flex flex-col justify-center">
