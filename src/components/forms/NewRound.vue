@@ -7,6 +7,7 @@ import { ref } from 'vue';
 let modalVisible = ref(false);
 let players = ref<Player[]>([]);
 let round = ref(0);
+let error = ref(false);
 
 const emits = defineEmits(['close']);
 
@@ -21,6 +22,13 @@ async function handleAddRound() {
 	modalVisible.value = false;
 	const form = document.getElementById('addRoundForm')! as HTMLFormElement;
 	const formData = new FormData(form);
+
+	const validRound = Array.from(formData.values()).some((value) => Number(value) === 0);
+	if (!validRound) {
+		error.value = true;
+		return;
+	}
+
 	const scores: Score[] = [];
 	const gameOver: Player[] = [];
 	for (const key of formData.keys()) {
@@ -44,7 +52,7 @@ async function handleAddRound() {
 				name: player.name,
 				score: Number(formData.get(`${name}-score`)),
 				phase: formData.get(`${name}-made-phase`) ? player.phase + 1 : player.phase,
-        made_phase: formData.get(`${name}-made-phase`) ? true : false
+				made_phase: formData.get(`${name}-made-phase`) ? true : false
 			});
 		}
 	}
@@ -56,7 +64,7 @@ async function handleAddRound() {
 
 	await addRound(round.value, scores);
 	form.reset();
-  emits('close');
+	emits('close');
 }
 </script>
 
@@ -92,4 +100,18 @@ async function handleAddRound() {
 		</ul>
 		<button type="submit" class="btn btn-secondary max-w-fit self-center mt-5">Add round</button>
 	</form>
+	<div v-if="error" role="alert" class="alert alert-error mt-10 sticky bottom-0 text-white">
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+			/>
+		</svg>
+		<span>At least one player must have a score of 0.</span>
+		<div>
+			<button class="btn btn-sm" @click="error = false">Accept</button>
+		</div>
+	</div>
 </template>
