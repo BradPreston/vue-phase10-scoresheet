@@ -12,6 +12,7 @@ type Score = {
 	name: string;
 	score: number; // player round score
 	phase: number; // if score = 0, phase + 1
+	made_phase: boolean;
 };
 
 type Round = {

@@ -3,8 +3,11 @@ import { type Player, type Round } from '@/utils/database/db';
 import { resetGame } from '@/utils/database/game';
 import { getPlayers } from '@/utils/database/player';
 import { getRounds } from '@/utils/database/rounds';
-import NewRoundModal from '@/components/newRoundModal.vue';
+import NewRoundModal from '@/components/modals/newRoundModal.vue';
 import { useLiveQuery } from '@/utils/hooks/useLiveQuery';
+import { ref } from 'vue';
+
+const isModalOpen = ref(false);
 
 defineProps<{
 	startGame: boolean;
@@ -32,7 +35,8 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 		</div>
 		<h2>Score sheet</h2>
 
-		<NewRoundModal />
+		<NewRoundModal v-if="isModalOpen" @close="isModalOpen = false" />
+		<button class="btn btn-secondary" @click="isModalOpen = true">Add round data</button>
 		<div class="overflow-x-auto">
 			<table class="table table-pin-rows">
 				<thead>
