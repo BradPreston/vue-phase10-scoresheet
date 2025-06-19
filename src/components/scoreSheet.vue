@@ -4,10 +4,14 @@ import { resetGame } from '@/utils/database/game';
 import { getPlayers } from '@/utils/database/player';
 import { getRounds } from '@/utils/database/rounds';
 import NewRoundModal from '@/components/modals/newRoundModal.vue';
+import EditRoundModal from '@/components/modals/editRoundModal.vue';
 import { useLiveQuery } from '@/utils/hooks/useLiveQuery';
 import { ref } from 'vue';
+import { useEditRoundIdStore } from '@/store';
+const store = useEditRoundIdStore();
 
-const isModalOpen = ref(false);
+let isNewRoundModalOpen = ref(false);
+let isEditRoundModalOpen = ref(false);
 
 defineProps<{
 	startGame: boolean;
@@ -18,6 +22,13 @@ function restartGame() {
 	resetGame()
 		.then(() => window.location.reload())
 		.catch((err) => console.log(err));
+}
+
+function handleOpenEditModal(e: MouseEvent) {
+	const target = e.target as HTMLButtonElement;
+	const roundId = target.getAttribute('data-round-id');
+	store.setId(Number(roundId));
+	isEditRoundModalOpen.value = true;
 }
 
 const roundsFromDB = useLiveQuery<Round[]>(async () => await getRounds());
@@ -35,8 +46,9 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 		</div>
 		<h2>Score sheet</h2>
 
-		<NewRoundModal v-if="isModalOpen" @close="isModalOpen = false" />
-		<button class="btn btn-secondary" @click="isModalOpen = true">Add round data</button>
+		<NewRoundModal v-if="isNewRoundModalOpen" @close="isNewRoundModalOpen = false" />
+		<EditRoundModal v-if="isEditRoundModalOpen" @close="isEditRoundModalOpen = false" />
+		<button class="btn btn-secondary" @click="isNewRoundModalOpen = true">Add round data</button>
 		<div class="overflow-x-auto">
 			<table class="table table-pin-rows">
 				<thead>
@@ -45,6 +57,7 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 						<th v-for="player in playersFromDB" :key="player.name" class="capitalize">
 							{{ player.name }}
 						</th>
+						<th>Action</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -55,6 +68,11 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 							><span class="inline-block px-2">|</span
 							><span class="inline-block w-4">{{ result.phase <= 10 ? result.phase : 10 }}</span>
 						</td>
+						<th>
+							<button class="btn btn-secondary btn-sm" :data-round-id="round.id" @click="handleOpenEditModal">
+								Edit
+							</button>
+						</th>
 					</tr>
 				</tbody>
 				<tfoot>
@@ -65,6 +83,7 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 							><span class="inline-block px-2">|</span
 							><span class="inline-block w-4">{{ player.phase <= 10 ? player.phase : 10 }}</span>
 						</td>
+						<th></th>
 					</tr>
 				</tfoot>
 			</table>
