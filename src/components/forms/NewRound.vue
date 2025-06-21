@@ -88,6 +88,7 @@ async function handleAddRound() {
 							:name="player.name + '-score'"
 							class="input input-bordered"
 							placeholder="Score"
+							autocomplete="off"
 						/>
 					</label>
 

@@ -179,6 +179,7 @@ async function handleEditRound() {
 							class="input input-bordered"
 							placeholder="Score"
 							:value="score.score"
+							autocomplete="off"
 						/>
 					</label>
 
