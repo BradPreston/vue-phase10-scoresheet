@@ -176,7 +176,7 @@ async function handleEditRound() {
 							:id="score.player_id + '-score'"
 							type="number"
 							:name="score.name + '-score'"
-							class="input input-bordered"
+							class="input input-bordered w-full"
 							placeholder="Score"
 							:value="score.score"
 							autocomplete="off"

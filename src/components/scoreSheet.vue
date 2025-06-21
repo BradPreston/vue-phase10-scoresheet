@@ -63,7 +63,7 @@ const playersFromDB = useLiveQuery<Player[]>(async () => await getPlayers());
 				<tbody>
 					<tr v-for="round in roundsFromDB" :key="round.id">
 						<th>{{ round.round }}</th>
-						<td v-for="result in round.scores" :key="result.name">
+						<td v-for="result in round.scores" :key="result.name" class="whitespace-nowrap">
 							<span class="inline-block w-4">{{ result.score }}</span
 							><span class="inline-block px-2">|</span
 							><span class="inline-block w-4">{{ result.phase <= 10 ? result.phase : 10 }}</span>

@@ -86,7 +86,7 @@ async function handleAddRound() {
 							:id="player.id + '-score'"
 							type="number"
 							:name="player.name + '-score'"
-							class="input input-bordered"
+							class="input input-bordered w-full"
 							placeholder="Score"
 							autocomplete="off"
 						/>
