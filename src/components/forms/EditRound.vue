@@ -4,67 +4,157 @@ import { getPlayerByName, updatePlayer } from '@/utils/database/player';
 import { updateRound, getRound } from '@/utils/database/rounds';
 import { ref } from 'vue';
 import { useEditRoundIdStore } from '@/store';
+
 const store = useEditRoundIdStore();
+const emits = defineEmits(['close']);
 
 let error = ref(false);
 let round = ref<Round>();
+let initialScores = ref<Score[]>();
+let playerTotalScores = ref<Player[]>([]);
 
-const emits = defineEmits(['close']);
+type KeyValuePair = [string, FormDataEntryValue];
+type GroupedResult = Record<string, Record<string, FormDataEntryValue>>;
+type UpdatePhase = {
+	previousPhase: number;
+	previousMadePhase: boolean;
+	currentMadePhase: boolean;
+};
 
 getRound(store.id).then((r) => {
 	if (r) {
+		initialScores.value = r.scores;
 		round.value = r;
+
+		r.scores.forEach(async (score) => {
+			const player = await getPlayerByName(score.name);
+			if (player) {
+				playerTotalScores.value.push(player);
+			}
+		});
 	}
 });
 
-async function handleEditRound() {
-	const form = document.getElementById('editRoundForm')! as HTMLFormElement;
-	const formData = new FormData(form);
+function getNameFromKey(value: string) {
+	return value.split('-')[0];
+}
 
-	const validRound = Array.from(formData.values()).some((value) => Number(value) === 0);
+function groupByName(pairs: KeyValuePair[]): GroupedResult {
+	const grouped: GroupedResult = {};
+
+	for (const [key, value] of pairs) {
+		const groupKey = getNameFromKey(key);
+
+		if (!grouped[groupKey]) {
+			grouped[groupKey] = {};
+		}
+
+		grouped[groupKey][key] = value;
+	}
+
+	return grouped;
+}
+
+function isRoundValid(pairs: KeyValuePair[]): boolean {
+	const grouped = groupByName(pairs);
+
+	for (const group of Object.values(grouped)) {
+		const hasZeroScore = Object.entries(group).some(([key, value]) => key.endsWith('score') && value === '0');
+
+		const hasMadePhaseOn = Object.entries(group).some(([key, value]) => key.endsWith('made-phase') && value === 'on');
+
+		if (hasZeroScore && hasMadePhaseOn) return true;
+	}
+
+	return false;
+}
+
+async function getScoresFromForm(formData: FormData): Promise<Score[]> {
+	const scores: Score[] = [];
+	for (const key of formData.keys()) {
+		const name = getNameFromKey(key);
+		const player = await getPlayerByName(name);
+		if (!player) continue;
+		if (!key.endsWith('score')) continue;
+		scores.push({
+			player_id: player.id,
+			name: player.name,
+			score: Number(formData.get(`${name}-score`)),
+			phase: player.phase,
+			made_phase: formData.get(`${name}-made-phase`) ? true : false
+		});
+	}
+	return scores;
+}
+
+function getUpdatedScores(
+	scoresFromForm: Score[],
+	scoresFromDB: Score[]
+): { updatedScores: Score[]; allScores: Score[] } {
+	const updatedScores: Score[] = [];
+	const allScores: Score[] = [];
+
+	for (const scoreFromForm of scoresFromForm) {
+		allScores.push(scoreFromForm);
+		const scoreFromDB = scoresFromDB.filter((score) => score.player_id === scoreFromForm.player_id)[0];
+		if (scoreFromForm.score !== scoreFromDB.score || scoreFromForm.made_phase !== scoreFromDB.made_phase) {
+			updatedScores.push(scoreFromForm);
+		}
+	}
+
+	return {
+		updatedScores,
+		allScores
+	};
+}
+
+function updatePhase({ previousPhase, previousMadePhase, currentMadePhase }: UpdatePhase) {
+	if (!previousMadePhase && currentMadePhase) return previousPhase + 1;
+	if (previousMadePhase && !currentMadePhase) return previousPhase - 1;
+	return previousPhase;
+}
+
+async function handleEditRound() {
+	if (!round.value || !initialScores.value || !playerTotalScores.value) return;
+
+	const form = document.getElementById('editRoundForm') as HTMLFormElement;
+	const formData = new FormData(form);
+	const formDataEntries = Array.from(formData.entries());
+	const validRound = isRoundValid(formDataEntries);
+
 	if (!validRound) {
 		error.value = true;
 		return;
 	}
 
-	const scores: Score[] = [];
-	const gameOver: Player[] = [];
-	for (const key of formData.keys()) {
-		const name = key.split('-')[0];
-		const player = await getPlayerByName(name);
-		if (!player) return;
+	const scores = await getScoresFromForm(formData);
+	const { updatedScores } = getUpdatedScores(scores, round.value.scores);
 
-		if (!scores.some((score) => score.player_id === player.id)) {
-			if (formData.get(`${name}-made-phase`)) {
-				if (player.phase + 1 >= 11) gameOver.push(player);
-			}
+	for (const updatedScore of updatedScores) {
+		const player = playerTotalScores.value.filter((p) => p.id === updatedScore.player_id)[0];
+		const previousScore = initialScores.value.filter((s) => s.player_id === updatedScore.player_id)[0];
+		if (!player || !previousScore) return;
 
-			// await updatePlayer({
-			// 	id: player.id,
-			// 	score: player.score + Number(formData.get(`${name}-score`)),
-			// 	phase: formData.get(`${name}-made-phase`) ? player.phase + 1 : player.phase
-			// });
+		const scoreDifference = updatedScore.score - previousScore.score; // add to previous score
+		const updatedPhase = updatePhase({
+			previousPhase: previousScore.phase,
+			currentMadePhase: updatedScore.made_phase,
+			previousMadePhase: previousScore.made_phase
+		});
 
-			scores.push({
-				player_id: player.id,
-				name: player.name,
-				score: Number(formData.get(`${name}-score`)),
-				phase: formData.get(`${name}-made-phase`) ? player.phase + 1 : player.phase,
-				made_phase: formData.get(`${name}-made-phase`) ? true : false
-			});
-		}
+		await updatePlayer({
+			id: player.id,
+			score: player.score + scoreDifference,
+			phase: updatedPhase
+		});
 	}
 
-	if (gameOver.length > 0) {
-		alert('Game over!');
-		document.getElementById('editRoundButton')!.style.display = 'none';
-	}
+	const updatedRound = { ...round.value, scores }
 
-	console.log(scores);
+	updateRound(updatedRound)
 
-	// await updateRound(round.value);
-	// form.reset();
-	// emits('close');
+	form.reset();
+	emits('close');
 }
 </script>
 
@@ -115,7 +205,7 @@ async function handleEditRound() {
 				d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
 			/>
 		</svg>
-		<span>At least one player must have a score of 0.</span>
+		<span>At least one player must have a score of 0 and made their phase.</span>
 		<div>
 			<button class="btn btn-sm" @click="error = false">Accept</button>
 		</div>
